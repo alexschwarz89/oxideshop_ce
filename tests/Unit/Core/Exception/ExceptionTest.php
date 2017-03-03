@@ -21,6 +21,8 @@
  */
 namespace Unit\Core;
 
+use OxidEsales\Eshop\Core\Exception\StandardException;
+
 class ExceptionTest extends \OxidTestCase
 {
 
@@ -28,7 +30,7 @@ class ExceptionTest extends \OxidTestCase
     public function testConstruct()
     {
         $oTestObject = oxNew('oxException');
-        $this->assertEquals('OxidEsales\EshopCommunity\Core\Exception\StandardException', get_class($oTestObject));
+        $this->assertInstanceOf(\OxidEsales\Eshop\Core\Exception\StandardException::class, $oTestObject);
     }
 
     // 2. testing constructor with message.

@@ -20,31 +20,20 @@
  * @version   OXID eShop CE
  */
 
-use OxidEsales\EshopCommunity\Core\Exception\DatabaseErrorException;
-use OxidEsales\TestingLibrary\UnitTestCase;
+namespace OxidEsales\EshopCommunity\Core\Exception;
 
 
 /**
- *
- * Test class for DatabaseException
- *
- * @group database-adapter
+ * Error handler, deals with PHP errors
  */
-class DatabaseExceptionTest extends UnitTestCase
+class ErrorHandler
 {
 
-    /**
-     * DatabaseException must be an instance of oxException
-     */
-    public function testDatabaseExceptionIsInstanceOfOxException()
+    public static function deprecationErrorHandler($code, $message, $file, $line)
     {
-        $message = 'message';
-        $code = 1;
-        $previous = new Exception();
+        $logFile = dirname(OX_LOG_FILE). DIRECTORY_SEPARATOR . 'deprecation.log';
+        $logMessage = vsprintf('[file %s] [line %s] [message %s]', [$file, $line, $message]) . PHP_EOL;
 
-        $expected = 'oxException';
-        $actualException = new DatabaseErrorException($message, $code, $previous);
-
-        $this->assertInstanceOf($expected, $actualException, 'DatabaseException is not an instance of oxException');
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
     }
 }

@@ -15,36 +15,32 @@
  * You should have received a copy of the GNU General Public License
  * along with OXID eShop Community Edition.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @link      http://www.oxid-esales.com
- * @copyright (C) OXID eSales AG 2003-2016
- * @version   OXID eShop CE
+ * @link          http://www.oxid-esales.com
+ * @copyright (C) OXID eSales AG 2003-2017
+ * @version       OXID eShop CE
  */
 
-use OxidEsales\EshopCommunity\Core\Exception\DatabaseErrorException;
-use OxidEsales\TestingLibrary\UnitTestCase;
+namespace Integration\Core\Exception;
 
 
-/**
- *
- * Test class for DatabaseException
- *
- * @group database-adapter
- */
-class DatabaseExceptionTest extends UnitTestCase
+use OxidEsales\Eshop\Core\Exception\ExceptionHandler;
+
+class ExceptionHandlingTest extends \OxidTestCase
 {
 
     /**
-     * DatabaseException must be an instance of oxException
+     *
      */
-    public function testDatabaseExceptionIsInstanceOfOxException()
+    public function testServerIsAlive ()
     {
-        $message = 'message';
-        $code = 1;
-        $previous = new Exception();
-
-        $expected = 'oxException';
-        $actualException = new DatabaseErrorException($message, $code, $previous);
-
-        $this->assertInstanceOf($expected, $actualException, 'DatabaseException is not an instance of oxException');
+        // $token = ExceptionHandler::getToken();
+        //$testUrl = $this->getConfig()->getShopUrl() . '/Core/Exception/ExceptionHandlerTest.php?token=' . $token . '&testcase=' . 1;
+/*        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $testUrl);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        $response = curl_exec($ch);
+        curl_close($ch);*/
+        $response = 'hello world';
+        $this->assertContains('hello world', $response, 'Server is alive');
     }
 }

@@ -20,31 +20,26 @@
  * @version   OXID eShop CE
  */
 
-use OxidEsales\EshopCommunity\Core\Exception\DatabaseErrorException;
-use OxidEsales\TestingLibrary\UnitTestCase;
-
+namespace OxidEsales\EshopCommunity\Core\Exception;
 
 /**
- *
- * Test class for DatabaseException
- *
- * @group database-adapter
+ * Exception to be thrown on database errors
  */
-class DatabaseExceptionTest extends UnitTestCase
+class DatabaseErrorException extends \OxidEsales\EshopCommunity\Core\Exception\DatabaseException
 {
 
     /**
-     * DatabaseException must be an instance of oxException
+     * DatabaseException constructor.
+     *
+     * Use this exception to catch and rethrow exceptions of the underlying DBAL.
+     * Provide the caught exception as the third parameter of the constructor to enable exception chaining.
+     *
+     * @param string     $message
+     * @param int        $code
+     * @param \Exception $previous Previous exception thrown by the underlying DBAL
      */
-    public function testDatabaseExceptionIsInstanceOfOxException()
+    public function __construct($message, $code, \Exception $previous)
     {
-        $message = 'message';
-        $code = 1;
-        $previous = new Exception();
-
-        $expected = 'oxException';
-        $actualException = new DatabaseErrorException($message, $code, $previous);
-
-        $this->assertInstanceOf($expected, $actualException, 'DatabaseException is not an instance of oxException');
+        parent::__construct($message, $code, $previous);
     }
 }
