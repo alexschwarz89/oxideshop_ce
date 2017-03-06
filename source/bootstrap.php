@@ -61,7 +61,7 @@ register_shutdown_function(function () {
         $timestamp = $date->format('D M H:i:s.u Y');
 
         /** report the error */
-        $logMessage = "[$timestamp] [uncaught error] [type $errorType] [file {$error['file']}] [line {$error['line']}] [code ]". $error['message'] . PHP_EOL;
+        $logMessage = "[$timestamp] [uncaught error] [type $errorType] [file {$error['file']}] [line {$error['line']}] [code ] [message {$error['message']}]". PHP_EOL;
         file_put_contents(OX_LOG_FILE, $logMessage, FILE_APPEND);
 
         // Do not display an error message, if this file is included during a CLI command

@@ -75,6 +75,10 @@ class ExceptionhandlerTest extends \OxidTestCase
     }
 
     // We can only test if a log file is not written - screen output must be checked manually or with selenium
+    /**
+     * Change behavior: A log entry is always written, ever if 'iDebug' == 0
+     * This test fails now and it should
+     */
     public function testExceptionHandlerNotRendererNoDebug()
     {
         $sFileName = 'oxexceptionhandlerTest_NotRenderer.txt';
@@ -206,9 +210,11 @@ class ExceptionhandlerTest extends \OxidTestCase
      * This test is incomplete as constant OXID_PHP_UNIT is taken to define if exitApplication should be called or not.
      * If OXID_PHP_UNIT was a variable, the test could run.
      *
+     * @covers \OxidEsales\Eshop\Core\Exception\ExceptionHandler::handleUncaughtException
+     *
      * @dataProvider dataProviderTestHandleUncaughtExceptionDebugStatus
      *
-     * @covers \OxidEsales\Eshop\Core\Exception\ExceptionHandler::handleUncaughtException
+     * @param $debug ExceptionHandler constructor parameter $debug i.e. debug level
      */
     public function testHandleUncaughtExceptionWillExitApplication($debug)
     {
@@ -229,7 +235,7 @@ class ExceptionhandlerTest extends \OxidTestCase
     }
 
     /**
-     * Dataprovider for testHandleUncaughtExceptionWillExitApplication
+     * Data provider for testHandleUncaughtExceptionWillExitApplication
      *
      * @return array
      */
@@ -302,8 +308,7 @@ class ExceptionhandlerTest extends \OxidTestCase
         /** @var ExceptionHandler|\PHPUnit_Framework_MockObject_MockObject $exceptionHandlerMock */
         $exceptionHandlerMock = $this->getMock(
             ExceptionHandler::class,
-            ['getFormattedException'],
-            [$debug]
+            ['getFormattedException']
         );
         $exceptionHandlerMock->expects($this->once())->method('getFormattedException');
 
@@ -320,6 +325,7 @@ class ExceptionhandlerTest extends \OxidTestCase
      */
     public function testGetFormattedException()
     {
+        $logContent = null;
         $fileName = dirname(OX_LOG_FILE) . DIRECTORY_SEPARATOR . __FUNCTION__ . '.log';
         $exceptionHandler = oxNew(ExceptionHandler::class);
 
@@ -346,18 +352,6 @@ class ExceptionhandlerTest extends \OxidTestCase
         foreach ($expectedLogContents as $expectedField => $expectedValue) {
             $this->assertContains($expectedValue, $logContent, 'Log formatter puts ' . $expectedField);
         }
-    }
-
-    /**
-     * @covers \OxidEsales\Eshop\Core\Exception\ExceptionHandler::getToken()
-     */
-    public function testGetTokenReturnsConstantHashOverTime()
-    {
-        $hash1 = ExceptionHandler::getToken();
-        sleep(5);
-        $hash2 = ExceptionHandler::getToken();
-
-        $this->assertEquals($hash1, $hash2);
     }
 
     /**
