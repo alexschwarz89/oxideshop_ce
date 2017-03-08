@@ -138,7 +138,7 @@ unset($configFile);
 /**
  * Set exception handler before including modules/functions.php so it can be overwritten easliy by shop operators.
  */
-$debugMode = (bool) \OxidEsales\Eshop\Core\Registry::get("oxConfigFile")->getVar('iDebug');
+$debugMode = (bool) \OxidEsales\Eshop\Core\Registry::get(\OxidEsales\Eshop\Core\ConfigFile::class)->getVar('iDebug');
 set_exception_handler(
     [
         new \OxidEsales\Eshop\Core\Exception\ExceptionHandler($debugMode),
@@ -148,22 +148,25 @@ set_exception_handler(
 unset($debugMode);
 
 /**
+ * Generic utility method file.
+ * The global object factory function oxNew is defined here.
+ */
+require_once OX_BASE_PATH . 'oxfunctions.php';
+
+/**
  * Custom bootstrap functionality.
  */
 if (file_exists(OX_BASE_PATH . 'modules/functions.php') &&
     is_readable(OX_BASE_PATH . 'modules/functions.php')
 ) {
-    /** @ todo document that a new exception handler could be set here */
     include OX_BASE_PATH . 'modules/functions.php';
 }
 
 /**
- * Generic utility method file.
- * The global object factory function oxNew is defined here.
  * The functions defined conditionally in this file may have been overwritten in 'modules/functions.php',
  * so their functionality may have changed completely.
  */
-require_once OX_BASE_PATH . 'oxfunctions.php';
+require_once OX_BASE_PATH . 'overridablefunctions.php';
 
 //sets default PHP ini params
 ini_set('session.name', 'sid');

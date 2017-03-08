@@ -2313,7 +2313,7 @@ class Config extends \OxidEsales\Eshop\Core\Base
      */
     protected function getExceptionHandler()
     {
-        $exceptionHandler = oxNew(\OxidEsales\Eshop\Core\Exception\ExceptionHandler::class);
+        $exceptionHandler = new \OxidEsales\Eshop\Core\Exception\ExceptionHandler();
 
         return $exceptionHandler;
     }

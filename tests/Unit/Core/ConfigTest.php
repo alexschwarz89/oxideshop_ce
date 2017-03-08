@@ -312,7 +312,7 @@ class ConfigTest extends \OxidTestCase
          * An instance of OxidEsales\Eshop\Core\Exception\DatabaseException::class should be caught and passed to the ExceptionHandler
          */
         $previousException = new \Exception();
-        $exception = oxNew(\OxidEsales\Eshop\Core\Exception\DatabaseException::class, '', 0, $previousException);
+        $exception = new \OxidEsales\Eshop\Core\Exception\DatabaseException('', 0, $previousException);
 
         $exceptionHandlerMock = $this->getMock(ExceptionHandler::class, ['handleDatabaseException']);
         $exceptionHandlerMock->expects($this->once())->method('handleDatabaseException');

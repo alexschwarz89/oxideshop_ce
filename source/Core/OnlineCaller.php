@@ -110,7 +110,7 @@ abstract class OnlineCaller
             $statusCode = $this->_getCurl()->getStatusCode();
             if ($statusCode != 200) {
                 /** @var oxException $oException */
-                $oException = oxNew(StandardException::class);
+                $oException = new StandardException();
                 throw $oException;
             }
             $this->_resetFailedCallsCount($iFailedCallsCount);

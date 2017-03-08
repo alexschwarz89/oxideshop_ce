@@ -22,8 +22,9 @@
 
 namespace OxidEsales\EshopCommunity\Core\Module;
 
-use oxConfig;
-use oxRegistry;
+use OxidEsales\Eshop\Core\Config;
+use OxidEsales\Eshop\Core\Exception\SystemComponentException;
+use OxidEsales\Eshop\Core\Registry;
 
 /**
  * Generates class chains for extended classes by modules.
@@ -147,7 +148,7 @@ class ModuleChainsGenerator
      * @param array  $classChain Module names
      * @param string $baseClass  Oxid base class
      *
-     * @throws \oxSystemComponentException missing system component exception
+     * @throws SystemComponentException missing system component exception
      *
      * @return string
      */
@@ -178,7 +179,7 @@ class ModuleChainsGenerator
      * @param string $class
      * @param string $extensionPath
      *
-     * @throws \oxSystemComponentException
+     * @throws SystemComponentException
      *
      * @return bool
      */
@@ -194,7 +195,7 @@ class ModuleChainsGenerator
             }
 
             if (!$this->isNamespacedClass($extensionPath)) {
-                $modulesDirectory = oxRegistry::get("oxConfigFile")->getVar("sShopDir");
+                $modulesDirectory = Registry::get("oxConfigFile")->getVar("sShopDir");
                 $extensionParentPath = "$modulesDirectory/modules/$extensionPath.php";
 
                 //including original file
@@ -232,8 +233,8 @@ class ModuleChainsGenerator
     protected function handleSpecialCases($requestedClass, $extensionClass)
     {
         if ($requestedClass == "oxconfig") {
-            $config = new oxConfig();
-            oxRegistry::set("oxConfig", $config);
+            $config = new Config();
+            Registry::set("oxConfig", $config);
         }
     }
 
@@ -244,17 +245,19 @@ class ModuleChainsGenerator
      * @param string $classExtension
      * @param string $moduleClass
      *
-     * @throws \oxSystemComponentException
+     * @throws SystemComponentException
      */
     protected function onModuleExtensionCreationError($classExtension, $moduleClass)
     {
-        $disableModuleOnError = !oxRegistry::get("oxConfigFile")->getVar("blDoNotDisableModuleOnError");
+        $disableModuleOnError = !Registry::get("oxConfigFile")->getVar("blDoNotDisableModuleOnError");
         if ($disableModuleOnError) {
             $this->disableModule($classExtension);
         } else {
-            $exception = oxNew("oxSystemComponentException");
-            $exception->setMessage("EXCEPTION_SYSTEMCOMPONENT_CLASSNOTFOUND");
+            $exception =  new \OxidEsales\Eshop\Core\Exception\SystemComponentException();
+            /** Use setMessage here instead of passing it in constructor in order to test exception message */
+            $exception->setMessage('EXCEPTION_SYSTEMCOMPONENT_CLASSNOTFOUND' . ' ' . $moduleClass);
             $exception->setComponent($moduleClass);
+
             throw $exception;
         }
     }
@@ -262,7 +265,7 @@ class ModuleChainsGenerator
     /**
      * Disables module, adds to aDisabledModules config.
      *
-     * @param array $modulePath Full module path
+     * @param string $modulePath Full module path
      */
     public function disableModule($modulePath)
     {

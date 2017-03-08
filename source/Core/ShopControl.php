@@ -469,7 +469,7 @@ class ShopControl extends \OxidEsales\Eshop\Core\Base
         $templateFile = $this->getConfig()->getTemplatePath($templateName, $this->isAdmin());
         if (!file_exists($templateFile)) {
             $ex = oxNew('oxSystemComponentException');
-            $ex->setMessage('EXCEPTION_SYSTEMCOMPONENT_TEMPLATENOTFOUND');
+            $ex->setMessage('EXCEPTION_SYSTEMCOMPONENT_TEMPLATENOTFOUND' . ' ' . $templateName);
             $ex->setComponent($templateName);
 
             $templateName = "message/exception.tpl";

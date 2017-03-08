@@ -19,14 +19,15 @@
  * @copyright (C) OXID eSales AG 2003-2016
  * @version   OXID eShop CE
  */
-namespace Unit\Core;
+namespace Unit\Core\Exception;
 
 use \Exception;
 use OxidEsales\Eshop\Core\Exception\ExceptionHandler;
+use OxidEsales\Eshop\Core\Exception\StandardException;
 use oxSystemComponentException;
 use \oxTestModules;
 
-class ExceptionhandlerTest extends \OxidTestCase
+class ExceptionHandlerTest extends \OxidTestCase
 {
 
     protected $_sMsg = 'TEST_EXCEPTION';
@@ -45,77 +46,50 @@ class ExceptionhandlerTest extends \OxidTestCase
         $this->assertEquals('TEST.log', $oTestObject->getLogFileName());
     }
 
-    // still incomplete
-    // We can only test if a log file is written - screen output must be checked manually or with selenium
-    public function testExceptionHandlerNotRendererDebug()
-    {
-        $sFileName = 'oxexceptionhandlerTest_NotRenderer.txt';
-        $oExc = oxNew('oxexception', $this->_sMsg);
-        $oTestObject = oxNew('oxexceptionhandler', '1'); // iDebug = 1
-        $oTestObject->setLogFileName($sFileName);
-
-        try {
-            $sMsg = $oTestObject->handleUncaughtException($oExc); // actuall test
-            $this->assertNotEquals($this->_sMsg, $sMsg);
-        } catch (Exception $e) {
-            // Lets try to delete an possible left over file
-            if (file_exists($this->getConfig()->getConfigParam('sShopDir') . 'log/' . $sFileName)) {
-                unlink($this->getConfig()->getConfigParam('sShopDir') . 'log/' . $sFileName);
-            }
-            $this->fail('handleUncaughtException() throws an exception.');
-        }
-        if (!file_exists($this->getConfig()->getConfigParam('sShopDir') . 'log/' . $sFileName)) {
-            $this->fail('No debug log file written');
-        }
-        $sFile = file_get_contents($this->getConfig()->getConfigParam('sShopDir') . 'log/' . $sFileName);
-        unlink($this->getConfig()->getConfigParam('sShopDir') . 'log/' . $sFileName); // delete file first as assert may return out this function
-        // we check on class name and message - rest is not checked yet
-        $this->assertContains($this->_sMsg, $sFile);
-        $this->assertContains('Exception', $sFile);
-    }
-
-    // We can only test if a log file is not written - screen output must be checked manually or with selenium
     /**
-     * Change behavior: A log entry is always written, ever if 'iDebug' == 0
-     * This test fails now and it should
+     * @dataProvider dataProviderExceptions Provides an OXID eShop style exception and a standard PHP Exception
+     *
+     * @param $exception
      */
-    public function testExceptionHandlerNotRendererNoDebug()
+    public function testExceptionHandlerReportsExceptionInDebugMode($exception)
     {
-        $sFileName = 'oxexceptionhandlerTest_NotRenderer.txt';
-        $oExc = oxNew('oxexception', $this->_sMsg);
-        $oTestObject = oxNew('oxexceptionhandler');
-        $oTestObject->setLogFileName($sFileName);
+        $debug = true;
+        $logFileName = 'oxexceptionhandlerTest_NotRenderer.txt';
+        /** @var ExceptionHandler|\PHPUnit_Framework_MockObject_MockObject $exceptionHandlerMock */
+        $exceptionHandlerMock = $this->getMock(
+            ExceptionHandler::class,
+            ['displayDebugMessage'], // Mock rendering of message in order not to print anything to the console
+            [$debug]
+        );
+        $exceptionHandlerMock->expects($this->once())->method('displayDebugMessage');
+        $exceptionHandlerMock->setLogFileName($logFileName);
 
         try {
-            $oTestObject->handleUncaughtException($oExc); // actuall test
-        } catch (Exception $e) {
+            $exceptionHandlerMock->handleUncaughtException($exception);
+        } catch (\Exception $e) {
             // Lets try to delete an possible left over file
-            if (file_exists($sFileName)) {
-                unlink($sFileName);
+            if (file_exists($this->getConfig()->getConfigParam('sShopDir') . 'log/' . $logFileName)) {
+                unlink($this->getConfig()->getConfigParam('sShopDir') . 'log/' . $logFileName);
             }
             $this->fail('handleUncaughtException() throws an exception.');
         }
-        if (file_exists($sFileName)) {
-            $this->fail('Illegally written in log file.');
-            @unlink($sFileName); // delete file first as assert may return out this function
+        if (!file_exists($this->getConfig()->getConfigParam('sShopDir') . 'log/' . $logFileName)) {
+            $this->fail('No log file written');
         }
+        $logFileContent = file_get_contents($this->getConfig()->getConfigParam('sShopDir') . 'log/' . $logFileName);
+        unlink($this->getConfig()->getConfigParam('sShopDir') . 'log/' . $logFileName); // delete file first as assert may return out this function
+        /** Test if the exception message is found in the lof file */
+        $this->assertContains($this->_sMsg, $logFileContent);
     }
 
-    public function testExceptionHandlerNotRendererDebugNotOxidException()
+    public function dataProviderExceptions()
     {
-        $sFileName = 'oxexceptionhandlerTest_NotRenderer.txt';
-        $oTestObject = oxNew('oxexceptionhandler', '1'); // iDebug = 1
-        $oTestObject->setLogFileName($sFileName);
-
-        $oTestObject->handleUncaughtException(new Exception("test exception"));
-        if (!file_exists($this->getConfig()->getConfigParam('sShopDir') . 'log/' . $sFileName)) {
-            $this->fail('No debug log file written');
-        }
-        $sFile = file_get_contents($this->getConfig()->getConfigParam('sShopDir') . 'log/' . $sFileName);
-        unlink($this->getConfig()->getConfigParam('sShopDir') . 'log/' . $sFileName); // delete file first as assert may return out this function
-        $this->assertContains("test exception", $sFile);
-        $this->assertContains('Exception', $sFile);
+        return [
+            [ new StandardException($this->_sMsg) ],
+            [ new \Exception($this->_sMsg) ],
+        ];
     }
+
 
     public function testSetIDebug()
     {
@@ -123,24 +97,6 @@ class ExceptionhandlerTest extends \OxidTestCase
         $oTestObject->setIDebug(2);
         //nothing should happen in unittests
         $this->assertEquals(2, $oTestObject->getNonPublicVar('_iDebug'));
-    }
-
-    public function testDealWithNoOxException()
-    {
-        $oTestObject = $this->getProxyClass("oxexceptionhandler");
-        $oTestObject->setIDebug(-1);
-
-        $oTestUtils = $this->getMock("oxUtils", array("writeToLog", "showMessageAndExit", "getTime"));
-        $oTestUtils->expects($this->once())->method("writeToLog");
-        $oTestException = new Exception("testMsg");
-
-        oxTestModules::addModuleObject('oxUtils', $oTestUtils);
-
-        try {
-            $oTestObject->UNITdealWithNoOxException($oTestException);
-        } catch (Exception $e) {
-
-        }
     }
 
     /**
@@ -175,9 +131,31 @@ class ExceptionhandlerTest extends \OxidTestCase
     }
 
     /**
+     * The message is different, if in CLI mode.
+     * Real message cannot be tested in UNIT or Integration tests
+     *
+     * @dataProvider dataProviderTestHandleUncaughtExceptionDebugStatus
+     *
      * @covers \OxidEsales\Eshop\Core\Exception\ExceptionHandler::handleUncaughtException
      */
-    public function testHandleUncaughtExceptionWillDisplayDebugMessageIfdebugIsTrue() {
+    public function testHandleUncaughtExceptionWillDisplayShortDebugMessageInCliMode($debug) {
+        /** @var ExceptionHandler|\PHPUnit_Framework_MockObject_MockObject $exceptionHandlerMock */
+        $exceptionHandlerMock = $this->getMock(
+            ExceptionHandler::class,
+            ['writeExceptionToLog'],
+            [$debug]
+        );
+        ob_start();
+        $exceptionHandlerMock->handleUncaughtException(new \Exception());
+        $displayMessage = ob_get_clean();
+
+        $this->assertContains('Uncaught exception. See ' . $exceptionHandlerMock->getLogFileName(), $displayMessage);
+    }
+
+    /**
+     * @covers \OxidEsales\Eshop\Core\Exception\ExceptionHandler::handleUncaughtException
+     */
+    public function testHandleUncaughtExceptionWillDisplayDebugMessageIfDebugIsTrue() {
         $debug = true;
         /** @var ExceptionHandler|\PHPUnit_Framework_MockObject_MockObject $exceptionHandlerMock */
         $exceptionHandlerMock = $this->getMock(
@@ -193,7 +171,7 @@ class ExceptionhandlerTest extends \OxidTestCase
     /**
      * @covers \OxidEsales\Eshop\Core\Exception\ExceptionHandler::handleUncaughtException
      */
-    public function testHandleUncaughtExceptionWillDisplayOfflinePageIfdebugIsFalse() {
+    public function testHandleUncaughtExceptionWillDisplayOfflinePageIfDebugIsFalse() {
         $debug = false;
         /** @var ExceptionHandler|\PHPUnit_Framework_MockObject_MockObject $exceptionHandlerMock */
         $exceptionHandlerMock = $this->getMock(
@@ -256,12 +234,15 @@ class ExceptionhandlerTest extends \OxidTestCase
     {
         $logDir = dirname(OX_LOG_FILE);
         $expectedFilePath = $logDir . DIRECTORY_SEPARATOR . basename($filePath);
-        /** @var ExceptionHandler $exceptionHandlerMock */
-        $exceptionHandler = oxNew(ExceptionHandler::class);
+        /** @var ExceptionHandler|\PHPUnit_Framework_MockObject_MockObject $exceptionHandlerMock */
+        $exceptionHandlerMock = $this->getMock(
+            ExceptionHandler::class,
+            ['displayOfflinePage']
+        );
 
-        $exceptionHandler->setLogFileName($filePath);
+        $exceptionHandlerMock->setLogFileName($filePath);
 
-        $exceptionHandler->handleUncaughtException(new \Exception('message', 1));
+        $exceptionHandlerMock->handleUncaughtException(new \Exception('message', 1));
         if (!file_exists($expectedFilePath) || is_dir($expectedFilePath)) {
             $testResult = false;
         } else {
@@ -308,7 +289,7 @@ class ExceptionhandlerTest extends \OxidTestCase
         /** @var ExceptionHandler|\PHPUnit_Framework_MockObject_MockObject $exceptionHandlerMock */
         $exceptionHandlerMock = $this->getMock(
             ExceptionHandler::class,
-            ['getFormattedException']
+            ['getFormattedException', 'displayOfflinePage']
         );
         $exceptionHandlerMock->expects($this->once())->method('getFormattedException');
 
@@ -327,12 +308,14 @@ class ExceptionhandlerTest extends \OxidTestCase
     {
         $logContent = null;
         $fileName = dirname(OX_LOG_FILE) . DIRECTORY_SEPARATOR . __FUNCTION__ . '.log';
-        $exceptionHandler = oxNew(ExceptionHandler::class);
-
-        $exceptionHandler->setLogFileName($fileName);
+        $exceptionHandlerMock = $this->getMock(
+            ExceptionHandler::class,
+            ['displayOfflinePage']
+        );
+        $exceptionHandlerMock->setLogFileName($fileName);
 
         $handeledException = new \Exception('message', 1);
-        $exceptionHandler->handleUncaughtException($handeledException);
+        $exceptionHandlerMock->handleUncaughtException($handeledException);
 
         if (file_exists($fileName) && !is_dir($fileName)) {
             $logContent = file_get_contents($fileName);
@@ -352,18 +335,5 @@ class ExceptionhandlerTest extends \OxidTestCase
         foreach ($expectedLogContents as $expectedField => $expectedValue) {
             $this->assertContains($expectedValue, $logContent, 'Log formatter puts ' . $expectedField);
         }
-    }
-
-    /**
-     * @covers \OxidEsales\Eshop\Core\Exception\ExceptionHandler::displayOfflinePage()
-     */
-    public function testDisplayOfflinePageDoesNotRenderAnythingInPhpCliMode ()
-    {
-        $debug = false;
-        /** @var ExceptionHandler $exceptionHandler */
-        $exceptionHandler = oxNew(ExceptionHandler::class, $debug);
-        $offlinePageContent = $exceptionHandler->displayOfflinePage();
-
-        $this->assertNull($offlinePageContent);
     }
 }

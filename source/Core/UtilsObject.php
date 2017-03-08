@@ -240,7 +240,7 @@ class UtilsObject
             if (!class_exists($realClassName)) {
                 $exception =  new \OxidEsales\Eshop\Core\Exception\SystemComponentException();
                 /** Use setMessage here instead of passing it in constructor in order to test exception message */
-                $exception->setMessage('class not found: ' .  $className);
+                $exception->setMessage('EXCEPTION_SYSTEMCOMPONENT_CLASSNOTFOUND' . ' ' . $className);
                 $exception->debugOut();
                 throw $exception;
             }

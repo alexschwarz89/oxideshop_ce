@@ -25,8 +25,11 @@ namespace OxidEsales\EshopCommunity\Core\Autoload;
 /**
  * This file holds the mapping of classes from the virtual namespace to the concrete classes of each edition.
  * Each edition has its own map file. The map files will be merged like this: CE <- PE <- EE
- * So the mapping to a concrete class of the OXID eShop communitiy edition will be overwritten, if this class exists the
+ * So the mapping to a concrete class of the OXID eShop community edition will be overwritten, if this class exists the
  * PE or EE edition.
+ *
+ * @internal Do not make a module extension for this class.
+ * @see      http://oxidforge.org/en/core-oxid-eshop-classes-must-not-be-extended.html
  */
 class VirtualNameSpaceClassMap
 {
@@ -465,8 +468,10 @@ class VirtualNameSpaceClassMap
             'OxidEsales\Eshop\Core\Exception\ConnectionException' => \OxidEsales\EshopCommunity\Core\Exception\ConnectionException::class,
             'OxidEsales\Eshop\Core\Exception\CookieException' => \OxidEsales\EshopCommunity\Core\Exception\CookieException::class,
             'OxidEsales\Eshop\Core\Exception\DatabaseConnectionException' => \OxidEsales\EshopCommunity\Core\Exception\DatabaseConnectionException::class,
+            'OxidEsales\Eshop\Core\Exception\DatabaseErrorException' => \OxidEsales\EshopCommunity\Core\Exception\DatabaseErrorException::class,
             'OxidEsales\Eshop\Core\Exception\DatabaseException' => \OxidEsales\EshopCommunity\Core\Exception\DatabaseException::class,
             'OxidEsales\Eshop\Core\Exception\DatabaseNotConfiguredException' => \OxidEsales\EshopCommunity\Core\Exception\DatabaseNotConfiguredException::class,
+            'OxidEsales\Eshop\Core\Exception\ErrorHandler' => \OxidEsales\EshopCommunity\Core\Exception\ErrorHandler::class,
             'OxidEsales\Eshop\Core\Exception\ExceptionHandler' => \OxidEsales\EshopCommunity\Core\Exception\ExceptionHandler::class,
             'OxidEsales\Eshop\Core\Exception\ExceptionToDisplay' => \OxidEsales\EshopCommunity\Core\Exception\ExceptionToDisplay::class,
             'OxidEsales\Eshop\Core\Exception\FileException' => \OxidEsales\EshopCommunity\Core\Exception\FileException::class,
@@ -599,7 +604,7 @@ class VirtualNameSpaceClassMap
             'OxidEsales\Eshop\Core\WidgetControl' => \OxidEsales\EshopCommunity\Core\WidgetControl::class,
         ];
 
-
+        
 
         return $classMap;
     }
