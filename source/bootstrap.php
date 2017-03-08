@@ -149,12 +149,11 @@ unset($debugMode);
 
 /**
  * Custom bootstrap functionality.
- * Registry is a
  */
 if (file_exists(OX_BASE_PATH . 'modules/functions.php') &&
     is_readable(OX_BASE_PATH . 'modules/functions.php')
 ) {
-    /** @ todo document this */
+    /** @ todo document that a new exception handler could be set here */
     include OX_BASE_PATH . 'modules/functions.php';
 }
 
