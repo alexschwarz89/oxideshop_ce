@@ -996,6 +996,7 @@ class ShopControl extends \OxidEsales\Eshop\Core\Base
      */
     protected function getControllerClass($controllerKey)
     {
+        /** Remove try catch block after routing BC is removed */
         try {
             $controllerClass = $this->resolveControllerClass($controllerKey);
         } catch (\OxidEsales\Eshop\Core\Exception\RoutingException $exception) {

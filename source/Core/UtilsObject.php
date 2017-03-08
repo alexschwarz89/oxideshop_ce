@@ -238,15 +238,9 @@ class UtilsObject
             $realClassName = $this->getClassName($className);
             //expect __autoload() (oxfunctions.php) to do its job when class_exists() is called
             if (!class_exists($realClassName)) {
-                $lang = Registry::getLang();
-                $message = sprintf(
-                    $lang->translateString('EXCEPTION_SYSTEMCOMPONENT_CLASSNOTFOUND', null, true),
-                    $className
-                );
-                /** @var $exception oxSystemComponentException */
-                $exception = oxNew(\OxidEsales\Eshop\Core\Exception\SystemComponentException::class);
+                $exception =  new \OxidEsales\Eshop\Core\Exception\SystemComponentException();
                 /** Use setMessage here instead of passing it in constructor in order to test exception message */
-                $exception->setMessage($message);
+                $exception->setMessage('class not found: ' .  $className);
                 $exception->debugOut();
                 throw $exception;
             }

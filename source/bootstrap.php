@@ -147,11 +147,6 @@ set_exception_handler(
 );
 unset($debugMode);
 
-// It could be a good idea to set a kind of deprecation error handler, but this can also be done at a later point in the shop
-// Regarding a new value in iDebug (which should be something like 2^7 to be able to switch to binary operations in the future)
-set_error_handler([\OxidEsales\EshopCommunity\Core\Exception\ErrorHandler::class, 'deprecationErrorHandler'], E_DEPRECATED | E_USER_DEPRECATED );
-trigger_error('class::method() is deprecated since .... See OXID eSales deprecations #v6.0-1 for more information.', E_USER_DEPRECATED);
-
 /**
  * Custom bootstrap functionality.
  * Registry is a
@@ -159,6 +154,7 @@ trigger_error('class::method() is deprecated since .... See OXID eSales deprecat
 if (file_exists(OX_BASE_PATH . 'modules/functions.php') &&
     is_readable(OX_BASE_PATH . 'modules/functions.php')
 ) {
+    /** @ todo document this */
     include OX_BASE_PATH . 'modules/functions.php';
 }
 

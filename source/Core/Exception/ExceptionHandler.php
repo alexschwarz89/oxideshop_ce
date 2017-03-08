@@ -31,7 +31,6 @@ use oxException;
  */
 class ExceptionHandler
 {
-
     /**
      * Log file path/name
      *
@@ -77,6 +76,9 @@ class ExceptionHandler
      */
     public function setLogFileName($fileName)
     {
+        /**
+         *  If $fileName !== basename($fileName) throw exception
+         */
         $fileName = dirname(OX_LOG_FILE) . DIRECTORY_SEPARATOR . basename($fileName);
 
         $this->_sFileName = $fileName;
@@ -104,14 +106,15 @@ class ExceptionHandler
         /**
          * Report the exception
          */
-        $this->writeExceptionToLog($exception);
+        $logWritten = $this->writeExceptionToLog($exception);
 
         /**
          * Render an error message.
          */
 
         if ($this->_iDebug) {
-            $this->displayDebugMessage($exception);
+            /** @todo */
+            $this->displayDebugMessage($exception, $logWritten);
         } else {
             $this->displayOfflinePage();
         }
@@ -250,7 +253,7 @@ class ExceptionHandler
      *
      * @return int|false
      */
-    protected function writeExceptionToLog(\Exception $exception)
+    public function writeExceptionToLog(\Exception $exception)
     {
         /**
          * @deprecated since v5.3 (2016-06-17); Logging mechanism will be changed in 6.0.
@@ -319,7 +322,8 @@ class ExceptionHandler
      */
     protected function displayDebugMessage(\Exception $exception)
     {
-        if (defined('OXID_PHP_UNIT')) {
+        if ('cli' !== strtolower(php_sapi_name())) {
+            echo 'Uncaught exception. See exception log'. PHP_EOL;
             return;
         }
         if (method_exists($exception, 'getString')) {

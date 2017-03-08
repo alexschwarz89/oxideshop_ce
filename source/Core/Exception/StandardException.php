@@ -153,7 +153,7 @@ class StandardException extends \Exception
      */
     public function debugOut()
     {
-        $exceptionHandler = oxNew(\OxidEsales\Eshop\Core\Exception\ExceptionHandler::class);
+        $exceptionHandler = new \OxidEsales\Eshop\Core\Exception\ExceptionHandler();
         /**
          * @deprecated since v6.0 (2017-02-27); Logging mechanism will be changed in 6.0.
          */
