@@ -16,7 +16,7 @@
  * along with OXID eShop Community Edition.  If not, see <http://www.gnu.org/licenses/>.
  *
  * @link      http://www.oxid-esales.com
- * @copyright (C) OXID eSales AG 2003-2016
+ * @copyright (C) OXID eSales AG 2003-2017
  * @version   OXID eShop CE
  */
 
@@ -34,6 +34,7 @@ use oxRegistry;
  */
 class ModuleList extends \OxidEsales\Eshop\Core\Base
 {
+
     const MODULE_KEY_PATHS = 'Paths';
     const MODULE_KEY_EVENTS = 'Events';
     const MODULE_KEY_VERSIONS = 'Versions';
@@ -645,6 +646,7 @@ class ModuleList extends \OxidEsales\Eshop\Core\Base
                 return true;
             }
         }
+
         return false;
     }
 
@@ -718,11 +720,14 @@ class ModuleList extends \OxidEsales\Eshop\Core\Base
 
         foreach ($aModules as $sOxClass => $aModulesList) {
             foreach ($aModulesList as $sModulePath) {
-                if (!$this->isNamespacedClass($sModulePath)) {
-                    $sExtPath = $this->getConfig()->getModulesDir() . $sModulePath . '.php';
-                    if (!file_exists($sExtPath)) {
+                if ($this->isNamespacedClass($sModulePath)) {
+                    $composerClassLoader = new \Composer\Autoload\ClassLoader();
+                    if (!$composerClassLoader->loadClass($sModulePath)) {
                         $aDeletedExt[$sOxClass][] = $sModulePath;
                     }
+                } else {
+                    /** Note: $aDeletedExt is passed by reference */
+                    $this->_backwardsCompatibleGetInvalidExtensions($sModulePath, $aDeletedExt, $sOxClass);
                 }
             }
         }
@@ -738,5 +743,22 @@ class ModuleList extends \OxidEsales\Eshop\Core\Base
     private function isNamespacedClass($className)
     {
         return strpos($className, '\\') !== false;
+    }
+
+    /**
+     * Backwards compatible version of self::_getInvalidExtensions()
+     *
+     * @param string $sModulePath
+     * @param array  $aDeletedExt Note: This parameter is passed by reference
+     * @param string $sOxClass
+     *
+     * @deprecated since v6.0 (2017-03-14); This method will be removed in the future.
+     */
+    private function _backwardsCompatibleGetInvalidExtensions($sModulePath, &$aDeletedExt, $sOxClass)
+    {
+        $sExtPath = $this->getConfig()->getModulesDir() . $sModulePath . '.php';
+        if (!file_exists($sExtPath)) {
+            $aDeletedExt[$sOxClass][] = $sModulePath;
+        }
     }
 }
