@@ -733,6 +733,7 @@ $aLang = array(
     'MODULE_DELETEEXTENSION'                         => 'Do you want to delete all registered module information and saved configurations?',
     'MODULE_PASSWORDS_DO_NOT_MATCH'                  => 'Passwords do not match!',
     'MODULE_REPEAT_PASSWORD'                         => 'Confirm password',
+    'MODULE_METADATA_PROBLEMATIC_DATA_IN_EXTEND'     => 'Invalid metadata in extend section. The following extended shop classes are either mistyped or not from virtual namespace: <br> %s',
     'LANGUAGE_ERRORGENERATEVIEWS'                    => "Please don't forget to update the database views under Service->Tools",
     'LANGUAGE_ACTIVE'                                => 'Active in frontend',
     'LANGUAGE_LIST_MENUITEM'                         => 'Master Settings',

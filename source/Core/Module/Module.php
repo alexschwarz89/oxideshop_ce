@@ -189,6 +189,16 @@ class Module extends \OxidEsales\Eshop\Core\Base
     }
 
     /**
+     * Returns array of module extensions as written in module's metadata.php.
+     *
+     * @return array
+     */
+    public function getExtensionsFromMetadata()
+    {
+        return isset($this->_aModule['extend']) ? $this->_aModule['extend'] : array();
+    }
+
+    /**
      * Returns associative array of module controller ids and corresponding classes.
      *
      * @return array
@@ -327,7 +337,7 @@ class Module extends \OxidEsales\Eshop\Core\Base
      */
     public function hasExtendClass()
     {
-        $aExtensions = $this->getExtensions();
+        $aExtensions = $this->getExtensionsFromMetadata();
 
         return isset($aExtensions)
                && is_array($aExtensions)

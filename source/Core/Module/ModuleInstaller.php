@@ -347,6 +347,7 @@ class ModuleInstaller extends \OxidEsales\Eshop\Core\Base
         $aModules = $this->_removeNotUsedExtensions($this->getModulesWithExtendedClass(), $oModule);
 
         if ($oModule->hasExtendClass()) {
+            $this->validateModuleMetadataExtendOnActivation($oModule);
             $aAddModules = $oModule->getExtensions();
             $aModules = $this->_mergeModuleArrays($aModules, $aAddModules);
         }
@@ -674,5 +675,19 @@ class ModuleInstaller extends \OxidEsales\Eshop\Core\Base
         if (!empty($duplicatedValues)) {
             throw new \OxidEsales\Eshop\Core\Exception\ModuleValidationException(implode(',', $duplicatedValues));
         }
+    }
+
+    /**
+     * Validate module metadata extend section.
+     * Only virtual namespace shop classes are free to patch.
+     *
+     * @param \OxidEsales\Eshop\Core\Module\Module $module
+     *
+     * @throws ModuleValidationException
+     */
+    protected function validateModuleMetadataExtendOnActivation(\OxidEsales\Eshop\Core\Module\Module $module)
+    {
+        $validator = oxNew(\OxidEsales\EshopCommunity\Core\Module\ModuleMetadataValidator::class);
+        $validator->checkModuleExtensionsForIncorrectNamespaceClasses($module);
     }
 }

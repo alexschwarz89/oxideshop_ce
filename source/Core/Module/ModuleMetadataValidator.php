@@ -23,6 +23,7 @@
 namespace OxidEsales\EshopCommunity\Core\Module;
 
 use oxModule;
+use OxidEsales\Eshop\Core\Registry;
 
 /**
  * Module metadata validation class.
@@ -46,5 +47,62 @@ class ModuleMetadataValidator implements \OxidEsales\Eshop\Core\Contract\IModule
     public function validate(\OxidEsales\Eshop\Core\Module\Module $oModule)
     {
         return file_exists($oModule->getMetadataPath());
+    }
+
+    /**
+     * Check module metadata for incorrect namespace shop classes.
+     * Class might be misspelled or not found n virtual namespace.
+     *
+     * @param \OxidEsales\Eshop\Core\Module\Module $module
+     *
+     * @throws \OxidEsales\Eshop\Core\Exception\ModuleValidationException
+     */
+    public function checkModuleExtensionsForIncorrectNamespaceClasses(\OxidEsales\Eshop\Core\Module\Module $module)
+    {
+        $incorrect = $this->getIncorrectExtensions($module);
+        if (!empty($incorrect)) {
+            $message = $this->prepareMessage('MODULE_METADATA_PROBLEMATIC_DATA_IN_EXTEND', $incorrect);
+            throw new \OxidEsales\Eshop\Core\Exception\ModuleValidationException($message);
+        }
+    }
+
+    /**
+     * Getter for possible incorrect extension info in metadata.php.
+     *
+     * @param \OxidEsales\Eshop\Core\Module\Module $module
+     *
+     * @return array
+     */
+    public function getIncorrectExtensions(\OxidEsales\Eshop\Core\Module\Module $module)
+    {
+        $incorrect = [];
+        $rawExtensions = $module->getExtensionsFromMetadata();
+        $virtualNamespaceClassMapProvider = Registry::get(\OxidEsales\Eshop\Core\Autoload\VirtualNameSpaceClassMapProvider::class);
+        $map = $virtualNamespaceClassMapProvider->getClassMap();
+
+        foreach ($rawExtensions as $classToBePatched => $moduleClass) {
+            if (\OxidEsales\Eshop\Core\UtilsObject::isNamespacedClass($classToBePatched) && !isset($map[$classToBePatched])) {
+                $incorrect[$classToBePatched] = $moduleClass;
+            }
+        }
+        return $incorrect;
+    }
+
+    /**
+     * @param string $languageConstant
+     * @param array  $incorrect
+     *
+     * @return string
+     */
+    protected function prepareMessage($languageConstant, $incorrect = array())
+    {
+        $additionalInformation = '';
+        foreach ($incorrect as $patchee => $patch) {
+            $additionalInformation .= $patchee . ' => ' . $patch . ', ';
+        }
+        $additionalInformation = rtrim($additionalInformation, ', ');
+        $message = sprintf(Registry::getLang()->translateString($languageConstant, null, true), $additionalInformation);
+
+        return $message;
     }
 }

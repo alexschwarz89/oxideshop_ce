@@ -53,10 +53,11 @@ class ModuleInstallerTest extends \OxidTestCase
         $aModulesBefore = array();
         $aModulesAfter = array('oxtest' => 'testdir/mytest');
 
-        $oModule = $this->getMock('oxModule', array('getId', 'getExtensions'));
+        $oModule = $this->getMock('oxModule', array('getId', 'getExtensions', 'getExtensionsFromMetadata'));
         $aExtends = array('oxtest' => 'testdir/mytest');
         $oModule->expects($this->any())->method('getId')->will($this->returnValue('test1'));
         $oModule->expects($this->any())->method('getExtensions')->will($this->returnValue($aExtends));
+        $oModule->expects($this->any())->method('getExtensionsFromMetadata')->will($this->returnValue($aExtends));
 
         $oModuleInstaller = oxNew('oxModuleInstaller');
 
@@ -80,9 +81,10 @@ class ModuleInstallerTest extends \OxidTestCase
 
         $oModuleInstaller = oxNew('oxModuleInstaller');
 
-        $oModule = $this->getMock('oxModule', array('getId', 'getExtensions'));
+        $oModule = $this->getMock('oxModule', array('getId', 'getExtensions', 'getExtensionsFromMetadata'));
         $oModule->expects($this->any())->method('getId')->will($this->returnValue('test'));
         $oModule->expects($this->any())->method('getExtensions')->will($this->returnValue(array('oxtest' => 'test/mytest')));
+        $oModule->expects($this->any())->method('getExtensionsFromMetadata')->will($this->returnValue(array('oxtest' => 'test/mytest')));
 
         $this->getConfig()->setConfigParam("aModules", $aModulesBefore);
         $this->getConfig()->setConfigParam("aDisabledModules", $aDisabledModulesBefore);
@@ -104,9 +106,10 @@ class ModuleInstallerTest extends \OxidTestCase
         $aModulesBefore = array('oxtest' => 'test/mytest');
         $aModulesAfter = array('oxtest' => 'test/mytest&test1/mytest1');
 
-        $oModule = $this->getMock('oxModule', array('getId', 'getExtensions'));
+        $oModule = $this->getMock('oxModule', array('getId', 'getExtensions', 'getExtensionsFromMetadata'));
         $oModule->expects($this->any())->method('getId')->will($this->returnValue('test1'));
         $oModule->expects($this->any())->method('getExtensions')->will($this->returnValue(array('oxtest' => 'test1/mytest1')));
+        $oModule->expects($this->any())->method('getExtensionsFromMetadata')->will($this->returnValue(array('oxtest' => 'test1/mytest1')));
 
         $oModuleInstaller = oxNew('oxModuleInstaller');
 
@@ -407,4 +410,106 @@ class ModuleInstallerTest extends \OxidTestCase
 
         $moduleInstallerMock->validateModuleMetadataControllersOnActivation(['someKey' => 'ExistingValue']);
     }
+
+    /**
+     * Data provider.
+     *
+     * @return array
+     */
+    public function dataProviderTestValidateExtendSectionOnActivationOk()
+    {
+        $data = [
+            'all_is_well' => ['metadata_extend' =>
+                                  [\OxidEsales\Eshop\Application\Model\Article::class => '\MyVendor\MyModule1\MyArticleClass',
+                                   \OxidEsales\Eshop\Application\Model\Order::class => '\MyVendor\MyModule1\MyOrderClass',
+                                   \OxidEsales\Eshop\Application\Model\User::class => '\MyVendor\MyModule1\MyUserClass'
+                                  ]
+            ],
+            'all_is_well_bc' => ['metadata_extend' =>
+                                     ['oxArticle' => '\MyVendor\MyModule1\MyArticleClass',
+                                      'oxOrder' => '\MyVendor\MyModule1\MyOrderClass',
+                                      'oxUser' => '\MyVendor\MyModule1\MyUserClass'
+                                     ]
+            ]
+        ];
+
+        return $data;
+    }
+
+    /**
+     * Test metadata extend section validation.
+     *
+     * @param array $metadata
+     * @param array $expected
+     *
+     * @dataProvider dataProviderTestValidateExtendSectionOnActivationOk
+     */
+    public function testValidateExtendSectionOnActivationOk($metadataExtend)
+    {
+        $moduleMock = $this->getMock(\OxidEsales\Eshop\Core\Module\Module::class, array('getId', 'getExtensionsFromMetadata', 'getMetaDataVersion', 'getInfo'));
+        $moduleMock->expects($this->any())->method('getId')->will($this->returnValue('testmodule'));
+        $moduleMock->expects($this->any())->method('getMetaDataVersion')->will($this->returnValue('2.0'));
+        $moduleMock->expects($this->any())->method('getInfo')->will($this->returnValue([]));
+        $moduleMock->expects($this->any())->method('getExtensionsFromMetadata')->will($this->returnValue($metadataExtend));
+        $installer = oxNew(\OxidEsales\EshopCommunity\Core\Module\ModuleInstaller::class);
+
+        $installer->activate($moduleMock);
+    }
+
+    /**
+     * Data provider.
+     *
+     * @return array
+     */
+    public function dataProviderTestValidateExtendSectionOnActivationError()
+    {
+        $data = [
+            'case_mismatch' => ['metadata_extend' =>
+                                    ['oxidEsales\eshop\application\model\article' => '\MyVendor\MyModule1\MyArticleClass',
+                                     'OxidEsales\Eshop\Application\Model\Order' => '\MyVendor\MyModule1\MyOrderClass',
+                                     'OxidEsales\Eshop\Application\Model\user' => '\MyVendor\MyModule1\MyUserClass'
+                                    ],
+                                'expected' => ['oxidEsales\eshop\application\model\article' => '\MyVendor\MyModule1\MyArticleClass',
+                                               'OxidEsales\Eshop\Application\Model\user' => '\MyVendor\MyModule1\MyUserClass']
+            ],
+            'edition_instead_of_vns' => ['metadata_extend' =>
+                                             [\OxidEsales\Eshop\Application\Model\Article::class => '\MyVendor\MyModule1\MyArticleClass',
+                                              \OxidEsales\EshopCommunity\Application\Model\Order::class => '\MyVendor\MyModule1\MyOrderClass',
+                                              \OxidEsales\EshopCommunity\Application\Model\User::class => '\MyVendor\MyModule1\MyUserClass'
+                                             ],
+                                         'expected' => [\OxidEsales\EshopCommunity\Application\Model\Order::class => '\MyVendor\MyModule1\MyOrderClass',
+                                                        \OxidEsales\EshopCommunity\Application\Model\User::class => '\MyVendor\MyModule1\MyUserClass']
+                                        ]
+        ];
+
+        return $data;
+    }
+
+    /**
+     * Test metadata extend section validation.
+     *
+     * @param array $metadata
+     * @param array $expected
+     *
+     * @dataProvider dataProviderTestValidateExtendSectionOnActivationError
+     */
+    public function testValidateExtendSectionOnActivationError($metadataExtend, $expected)
+    {
+        $moduleMock = $this->getMock(\OxidEsales\Eshop\Core\Module\Module::class, array('getId', 'getExtensionsFromMetadata', 'getMetaDataVersion', 'getInfo'));
+        $moduleMock->expects($this->any())->method('getId')->will($this->returnValue('testmodule'));
+        $moduleMock->expects($this->any())->method('getMetaDataVersion')->will($this->returnValue('2.0'));
+        $moduleMock->expects($this->any())->method('getInfo')->will($this->returnValue([]));
+        $moduleMock->expects($this->any())->method('getExtensionsFromMetadata')->will($this->returnValue($metadataExtend));
+        $installer = oxNew(\OxidEsales\EshopCommunity\Core\Module\ModuleInstaller::class);
+
+        $msg = '';
+        foreach ($expected as $patchee => $patch) {
+            $msg .= $patchee . ' => ' . $patch . ', ';
+        }
+        $msg = rtrim($msg, ', ');
+        $this->setExpectedException(\OxidEsales\EshopCommunity\Core\Exception\ModuleValidationException::class, $msg);
+
+        $installer->activate($moduleMock);
+    }
+
 }

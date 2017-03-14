@@ -729,6 +729,7 @@ $aLang = array(
     'MODULE_DELETEEXTENSION'                         => 'Möchten Sie alle registrierten Modulinformationen und gespeicherten Konfigurationseinstellungen löschen?',
     'MODULE_PASSWORDS_DO_NOT_MATCH'                  => 'Passwörter stimmen nicht überein!',
     'MODULE_REPEAT_PASSWORD'                         => 'Passwort bestätigen',
+    'MODULE_METADATA_PROBLEMATIC_DATA_IN_EXTEND'     => 'Ungültige Metadaten im Abschnitt extend. Die folgenden Shopklassen sind entweder falsch geschrieben oder gehören nicht zum virtuellen Namespace: <br> %s',
     'LANGUAGE_ERRORGENERATEVIEWS'                    => "Bitte aktualisieren Sie die Datenbank-Views unter Service -> Tools",
     'LANGUAGE_ACTIVE'                                => 'Im Frontend aktiv',
     'LANGUAGE_LIST_MENUITEM'                         => 'Stammdaten',
