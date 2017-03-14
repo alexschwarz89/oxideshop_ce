@@ -200,16 +200,19 @@ class ModuleChainsGenerator
                 $extensionParentPath = "$modulesDirectory/modules/$extensionPath.php";
 
                 //including original file
-                if (file_exists($extensionParentPath)) {
+                if (is_readable($extensionParentPath)) {
                     include_once $extensionParentPath;
-                } elseif (!class_exists($extensionClass)) {
-                    $this->handleSpecialCases($class, $extensionClass);
-                    $this->onModuleExtensionCreationError($extensionPath, $extensionClass);
-
-                    return false;
                 }
             }
         }
+
+        if (!class_exists($extensionClass)) {
+            $this->handleSpecialCases($class);
+            $this->onModuleExtensionCreationError($extensionPath, $extensionClass);
+
+            return false;
+        }
+
 
         return true;
     }
@@ -229,9 +232,8 @@ class ModuleChainsGenerator
      * but we can't create it as module class extending it does not exist. So we will use original oxConfig object instead.
      *
      * @param string $requestedClass Class, for which extension chain was generated.
-     * @param string $extensionClass
      */
-    protected function handleSpecialCases($requestedClass, $extensionClass)
+    protected function handleSpecialCases($requestedClass)
     {
         if ($requestedClass == "oxconfig") {
             $config = new oxConfig();
@@ -251,12 +253,20 @@ class ModuleChainsGenerator
     protected function onModuleExtensionCreationError($classExtension, $moduleClass)
     {
         $disableModuleOnError = !oxRegistry::get("oxConfigFile")->getVar("blDoNotDisableModuleOnError");
-        if ($disableModuleOnError) {
-            $this->disableModule($classExtension);
+        $debugMode = oxRegistry::get("oxConfigFile")->getVar("iDebug");
+        if ($disableModuleOnError && !$debugMode) {
+            if ($this->disableModule($classExtension)) {
+                $module = oxNew("oxModule");
+                $moduleId = $module->getIdByPath($classExtension);
+                $message = sprintf('Module class %s not found. Module ID %s disabled', $moduleClass, $moduleId);
+                $exception = new \OxidEsales\Eshop\Core\Exception\StandardException($message);
+                $exception->debugOut();
+            }
         } else {
             $exception = oxNew("oxSystemComponentException");
             $exception->setMessage("EXCEPTION_SYSTEMCOMPONENT_CLASSNOTFOUND");
             $exception->setComponent($moduleClass);
+
             throw $exception;
         }
     }
@@ -264,7 +274,9 @@ class ModuleChainsGenerator
     /**
      * Disables module, adds to aDisabledModules config.
      *
-     * @param array $modulePath Full module path
+     * @param string $modulePath Full module path
+     *
+     * @return bool
      */
     public function disableModule($modulePath)
     {
@@ -275,7 +287,7 @@ class ModuleChainsGenerator
         $moduleCache = oxNew('oxModuleCache', $module);
         $moduleInstaller = oxNew('oxModuleInstaller', $moduleCache);
 
-        $moduleInstaller->deactivate($module);
+        return $moduleInstaller->deactivate($module);
     }
 
     /**
