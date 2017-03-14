@@ -675,27 +675,4 @@ class ModuleInstaller extends \OxidEsales\Eshop\Core\Base
             throw new \OxidEsales\Eshop\Core\Exception\ModuleValidationException(implode(',', $duplicatedValues));
         }
     }
-
-    /**
-     * Translate module metadata information about patched shop classes
-     * into virtual namespace. There might still be BC class names used in module metadata.php.
-     *
-     * @param \OxidEsales\Eshop\Core\Module\Module $module
-     *
-     * @return array
-     */
-    protected function getVirtualShopClassExtensions(\OxidEsales\Eshop\Core\Module\Module $module)
-    {
-        $rawExtensions = $module->getExtensions();
-        $extensions = [];
-
-        foreach ($rawExtensions as $classToBePatched => $moduleClass) {
-            if (!\OxidEsales\Eshop\Core\UtilsObject::isNamespacedClass($classToBePatched)) {
-                $bcMap = Registry::getBackwardsCompatibilityClassMap();
-                $classToBePatched = $bcMap[strtolower($classToBePatched)] ?: $classToBePatched;
-            }
-            $extensions[$classToBePatched] = $moduleClass;
-        }
-        return $extensions;
-    }
 }
